@@ -117,6 +117,11 @@ void add_heap_tree(struct HEAP_TREE* tree, element_t element)
 // get and remove the first element
 element_t poll(struct HEAP_TREE* tree)
 {
+    if (tree->last_index < 0)
+    {
+        _raise("Trying to poll from an empty tree");
+        return 0;
+    }
     // TODO: comprobacion de si esta vacio
     element_t ret = tree->tree[0];
     _swap(tree, 0, tree->last_index--);
@@ -126,7 +131,7 @@ element_t poll(struct HEAP_TREE* tree)
 }
 
 
-void putpadd(int s)
+void _putpadding(int s)
 {
     for(int i = 0; i < s; i++)
         putchar(' ');
@@ -135,7 +140,7 @@ void putpadd(int s)
 
 int _pow2(int n)
 {
-    if(n == 0)
+    if(n <= 0)
         return 1;
     else
         return 2 * _pow2(n - 1);
@@ -144,7 +149,7 @@ int _pow2(int n)
 void print_tree_prettier(struct HEAP_TREE tree)
 {
     int feetammount = (tree.capacity + 1) / 2;
-    int levels      = (int)log2(tree.capacity + 1);
+    int levels      = (int)log2(tree.capacity)+1;
     int num_width   = 4;
     int total_width = (feetammount * 2 - 1) * num_width;
     int left_padding, mid_padding;
@@ -156,7 +161,7 @@ void print_tree_prettier(struct HEAP_TREE tree)
     {
         left_padding = (_pow2(levels - level - 1) - 1) * num_width;
         mid_padding = (2 * (_pow2(levels - level - 1) - 1) + 1) * num_width - 2;
-        putpadd(left_padding);
+        _putpadding(left_padding);
         for(int i = 0; i < _pow2(level); i++)
         {
             if(index > tree.last_index)
@@ -165,7 +170,7 @@ void print_tree_prettier(struct HEAP_TREE tree)
                 break;
             }
             printf("(%.*d)", num_width, tree.tree[index++] % (int)pow(10, num_width));
-            putpadd(mid_padding);
+            _putpadding(mid_padding);
         }
         putchar('\n');
     }
@@ -186,11 +191,11 @@ void print_tree(struct HEAP_TREE tree)
     {
         left_padding = (_pow2(levels - level - 1) - 1) * num_width;
         mid_padding  = (2 * (_pow2(levels - level - 1) - 1) + 1) * num_width;
-        putpadd(left_padding);
+        _putpadding(left_padding);
         for(int i = 0; i < _pow2(level); i++)
         {
             printf("%.*d", num_width, tree.tree[index++] % (int)pow(10, num_width));
-            putpadd(mid_padding);
+            _putpadding(mid_padding);
         }
         putchar('\n');
     }
