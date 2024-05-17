@@ -38,13 +38,19 @@ int _get_Rchild(int current_index)
     return current_index * 2 + 2;
 }
 
-void _fix_topward(struct HEAP_TREE* tree, int current_index)
+
+int int_lessthan(void*a, void*b)
+{
+    return *(int*) a < *(int*)b;
+}
+
+void _fix_topward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, void*))
 {
     element_t parent;
     while(current_index != 0)
     {
         parent = _get_parent(current_index);
-        if(tree->tree[current_index] < tree->tree[parent])
+        if(comp((void*)&tree->tree[current_index], (void*)&tree->tree[parent]))
         {
             _swap(tree, parent, current_index);
             current_index = parent;
@@ -55,7 +61,7 @@ void _fix_topward(struct HEAP_TREE* tree, int current_index)
 }
 
 
-void _fix_backward(struct HEAP_TREE* tree, int current_index)
+void _fix_backward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, void*))
 {
     element_t childL, childR, smallest_child;
     while(current_index <= tree->last_index)
@@ -66,8 +72,8 @@ void _fix_backward(struct HEAP_TREE* tree, int current_index)
             childR = childL;
         if(childL > tree->last_index)
             break;
-        smallest_child = (tree->tree[childR] < tree->tree[childL]) ? childR : childL;
-        if(tree->tree[current_index] > tree->tree[smallest_child])
+        smallest_child = comp((void*)&tree->tree[childR], (void*)&tree->tree[childL]) ? childR : childL;
+        if(comp((void*)&tree->tree[smallest_child],(void*)&tree->tree[current_index] ))
         {
             _swap(tree, current_index, smallest_child);
             current_index = smallest_child;
@@ -102,7 +108,7 @@ void add_heap_tree(struct HEAP_TREE* tree, element_t element)
     if(tree->last_index + 1 < tree->capacity)
     {
         tree->tree[++tree->last_index] = element;
-        _fix_topward(tree, tree->last_index);
+        _fix_topward(tree, tree->last_index, int_lessthan);
         if(MHT_VERBOSE)
             puts("Adding new element");
     }
@@ -126,7 +132,7 @@ element_t poll(struct HEAP_TREE* tree)
     element_t ret = tree->tree[0];
     _swap(tree, 0, tree->last_index--);
 
-    _fix_backward(tree, 0);
+    _fix_backward(tree, 0, int_lessthan);
     return ret;
 }
 
