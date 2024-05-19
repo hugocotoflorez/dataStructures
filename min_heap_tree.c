@@ -2,18 +2,15 @@
 #include <math.h>
 #include <stdio.h>
 
-void print_plain_tree(struct HEAP_TREE tree)
+int int_lessthan(void*a, void*b)
 {
-    for(int i = 0; i <= tree.last_index; i++)
-        printf("%d, ", tree.tree[i]);
-    putchar('\n');
+    return *(int*) a < *(int*)b;
 }
-
-
-int _raise(const char* errmsg)
+void _raise(const char* errmsg)
 {
     printf("Error: %.*s\n", 80, errmsg); // with 80 as max length
-    return 0;                            // dont exit on exception
+    if (MHT_EXITONERR)
+        exit(1);
 }
 
 void _swap(struct HEAP_TREE* tree, int i, int j)
@@ -39,18 +36,14 @@ int _get_Rchild(int current_index)
 }
 
 
-int int_lessthan(void*a, void*b)
-{
-    return *(int*) a < *(int*)b;
-}
 
-void _fix_topward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, void*))
+void _fix_topward(struct HEAP_TREE* tree, int current_index)
 {
     element_t parent;
     while(current_index != 0)
     {
         parent = _get_parent(current_index);
-        if(comp((void*)&tree->tree[current_index], (void*)&tree->tree[parent]))
+        if(tree->comp((void*)&tree->tree[current_index], (void*)&tree->tree[parent]))
         {
             _swap(tree, parent, current_index);
             current_index = parent;
@@ -61,7 +54,7 @@ void _fix_topward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, v
 }
 
 
-void _fix_backward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, void*))
+void _fix_backward(struct HEAP_TREE* tree, int current_index)
 {
     element_t childL, childR, smallest_child;
     while(current_index <= tree->last_index)
@@ -72,8 +65,8 @@ void _fix_backward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, 
             childR = childL;
         if(childL > tree->last_index)
             break;
-        smallest_child = comp((void*)&tree->tree[childR], (void*)&tree->tree[childL]) ? childR : childL;
-        if(comp((void*)&tree->tree[smallest_child],(void*)&tree->tree[current_index] ))
+        smallest_child = tree->comp((void*)&tree->tree[childR], (void*)&tree->tree[childL]) ? childR : childL;
+        if(tree->comp((void*)&tree->tree[smallest_child],(void*)&tree->tree[current_index] ))
         {
             _swap(tree, current_index, smallest_child);
             current_index = smallest_child;
@@ -83,12 +76,13 @@ void _fix_backward(struct HEAP_TREE* tree, int current_index, int(*comp)(void*, 
     }
 }
 
-struct HEAP_TREE create_heap_tree(int capacity)
+struct HEAP_TREE create_heap_tree(int capacity, int(*comp)(void*, void*))
 {
     struct HEAP_TREE tree;
     tree.tree       = malloc(sizeof(element_t) * capacity);
     tree.capacity   = capacity;
     tree.last_index = -1;
+    tree.comp = comp;
     if(MHT_VERBOSE)
         puts("HEAP TREE CREATED");
     return tree;
@@ -108,14 +102,13 @@ void add_heap_tree(struct HEAP_TREE* tree, element_t element)
     if(tree->last_index + 1 < tree->capacity)
     {
         tree->tree[++tree->last_index] = element;
-        _fix_topward(tree, tree->last_index, int_lessthan);
+        _fix_topward(tree, tree->last_index);
         if(MHT_VERBOSE)
             puts("Adding new element");
     }
     else
     {
-        if(_raise("Trying to add to a full tree"))
-            exit(1);
+        _raise("Trying to add to a full tree");
     }
 }
 
@@ -132,7 +125,7 @@ element_t poll(struct HEAP_TREE* tree)
     element_t ret = tree->tree[0];
     _swap(tree, 0, tree->last_index--);
 
-    _fix_backward(tree, 0, int_lessthan);
+    _fix_backward(tree, 0);
     return ret;
 }
 
@@ -142,8 +135,14 @@ void _putpadding(int s)
     for(int i = 0; i < s; i++)
         putchar(' ');
 }
+void _putseparator(int s)
+{
+    for(int i = 0; i < s; i++)
+        putchar('-');
+    putchar('\n');
+}
 
-
+// just to avoid math.h deppendency. TODO: improve algorithm
 int _pow2(int n)
 {
     if(n <= 0)
@@ -152,17 +151,14 @@ int _pow2(int n)
         return 2 * _pow2(n - 1);
 }
 
-void print_tree_prettier(struct HEAP_TREE tree)
+void print_tree(struct HEAP_TREE tree)
 {
-    int feetammount = (tree.capacity + 1) / 2;
     int levels      = (int)log2(tree.capacity)+1;
     int num_width   = 4;
-    int total_width = (feetammount * 2 - 1) * num_width;
+    int total_width = _pow2(levels-1)*(num_width)*2-2;
     int left_padding, mid_padding;
     int index = 0;
-    for(int i = 0; i < total_width; i++)
-        putchar('-');
-    putchar('\n');
+    _putseparator(total_width);
     for(int level = 0; level < levels; level++)
     {
         left_padding = (_pow2(levels - level - 1) - 1) * num_width;
@@ -180,29 +176,18 @@ void print_tree_prettier(struct HEAP_TREE tree)
         }
         putchar('\n');
     }
-    for(int i = 0; i < total_width; i++)
-        putchar('-');
+    _putseparator(total_width);
+}
+
+void print_plain_tree(struct HEAP_TREE tree)
+{
+    for(int i = 0; i <= tree.last_index; i++)
+        printf("%d, ", tree.tree[i]);
     putchar('\n');
 }
 
-void print_tree(struct HEAP_TREE tree)
-{
-    int feetammount = (tree.capacity + 1) / 2;
-    int levels      = (int)log2(tree.capacity + 1);
-    int num_width   = 4;
-    int total_width = (feetammount * 2 - 1) * num_width;
-    int left_padding, mid_padding;
-    int index = 0;
-    for(int level = 0; level < levels; level++)
-    {
-        left_padding = (_pow2(levels - level - 1) - 1) * num_width;
-        mid_padding  = (2 * (_pow2(levels - level - 1) - 1) + 1) * num_width;
-        _putpadding(left_padding);
-        for(int i = 0; i < _pow2(level); i++)
-        {
-            printf("%.*d", num_width, tree.tree[index++] % (int)pow(10, num_width));
-            _putpadding(mid_padding);
-        }
-        putchar('\n');
-    }
-}
+
+
+
+#undef MHT_EXITONERR
+#undef MHT_EXITONERR
