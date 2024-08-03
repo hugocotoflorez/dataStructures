@@ -10,7 +10,7 @@
 typedef int element_t;
 typedef struct __araylist
 {
-    element_t** data;
+    element_t **data;
 
     size_t capacity;
     size_t length;
@@ -22,35 +22,39 @@ typedef struct __araylist
 // create a list
 Arraylist arraylist_create(size_t capacity);
 // modify the element in a valid index
-void arraylist_modify(Arraylist* arraylist, size_t index, element_t element);
+void arraylist_modify(Arraylist *arraylist, size_t index, element_t element);
 // append an element to the end of the list
-size_t arraylist_append(Arraylist* arraylist, element_t element);
+size_t arraylist_append(Arraylist *arraylist, element_t element);
 // insert an element at index (quite inefficient)
-void arraylist_insert(Arraylist* arraylist, size_t index, element_t element);
+void arraylist_insert(Arraylist *arraylist, size_t index, element_t element);
 // remove an element at index
-element_t arraylist_remove(Arraylist* arraylist, size_t index);
+element_t arraylist_remove(Arraylist *arraylist, size_t index);
 // get the element at some index
 element_t arraylist_get(Arraylist arraylist, size_t index);
 // just for 'debugging'
 void arraylist_print(Arraylist arraylist);
 
 
-Arraylist arraylist_create(size_t capacity)
+Arraylist
+arraylist_create(size_t capacity)
 {
     return (Arraylist){
         .capacity = capacity > 0 ? capacity : 1,
         .length   = 0,
-        .data     = malloc(sizeof(element_t*) * capacity),
+        .data     = malloc(sizeof(element_t *) * capacity),
     };
 }
 
-void _arraylist_resize(Arraylist* arraylist)
+void
+_arraylist_resize(Arraylist *arraylist)
 {
     arraylist->capacity *= AL_INCREMENT;
-    arraylist->data = realloc(arraylist->data, arraylist->capacity * sizeof(element_t*));
+    arraylist->data =
+    realloc(arraylist->data, arraylist->capacity * sizeof(element_t *));
 }
 
-size_t arraylist_append(Arraylist* arraylist, element_t element)
+size_t
+arraylist_append(Arraylist *arraylist, element_t element)
 {
     if (arraylist->length == arraylist->capacity)
         _arraylist_resize(arraylist);
@@ -59,7 +63,8 @@ size_t arraylist_append(Arraylist* arraylist, element_t element)
     return arraylist->length++;
 }
 
-void arraylist_modify(Arraylist* arraylist, size_t index, element_t element)
+void
+arraylist_modify(Arraylist *arraylist, size_t index, element_t element)
 {
     if (index >= arraylist->length)
         return;
@@ -67,14 +72,16 @@ void arraylist_modify(Arraylist* arraylist, size_t index, element_t element)
 }
 
 // i and j MUST be 0<=i,j<length
-void _swap(Arraylist* arraylist, size_t i, size_t j)
+void
+_swap(Arraylist *arraylist, size_t i, size_t j)
 {
-    element_t* temp    = arraylist->data[i];
+    element_t *temp    = arraylist->data[i];
     arraylist->data[i] = arraylist->data[j];
     arraylist->data[j] = temp;
 }
 
-void arraylist_insert(Arraylist* arraylist, size_t index, element_t element)
+void
+arraylist_insert(Arraylist *arraylist, size_t index, element_t element)
 {
     if (index >= arraylist->length)
         return;
@@ -84,7 +91,8 @@ void arraylist_insert(Arraylist* arraylist, size_t index, element_t element)
 }
 
 
-element_t arraylist_remove(Arraylist* arraylist, size_t index)
+element_t
+arraylist_remove(Arraylist *arraylist, size_t index)
 {
     element_t temp;
     if (index >= arraylist->length)
@@ -100,21 +108,27 @@ element_t arraylist_remove(Arraylist* arraylist, size_t index)
 }
 
 
-element_t arraylist_get(Arraylist arraylist, size_t index)
+element_t
+arraylist_get(Arraylist arraylist, size_t index)
 {
     if (index >= arraylist.length)
         return ELEM_ERR;
-    return *((element_t*)arraylist.data[index]);
+    return *((element_t *) arraylist.data[index]);
 }
 
-void arraylist_print(Arraylist arraylist)
+void
+arraylist_print(Arraylist arraylist)
 {
     for (int i = 0; i < arraylist.length; i++)
         printf("%d, ", arraylist_get(arraylist, i));
     putchar('\n');
 }
 
-int main(void)
+
+#ifdef TEST
+
+int
+main(void)
 {
     Arraylist arr;
     puts("Creating");
@@ -142,3 +156,4 @@ int main(void)
     arraylist_remove(&arr, 10);
     arraylist_print(arr);
 }
+#endif

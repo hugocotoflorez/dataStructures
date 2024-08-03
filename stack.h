@@ -14,50 +14,51 @@ typedef enum
 
 typedef struct
 {
-    void* stack;
-    void* stack_ptr; // apunta al siguiente elemento
-    void* stack_end;
+    void *stack;     // apunta al primer elemento
+    void *stack_ptr; // apunta al siguiente elemento
+    void *stack_end; // apunta al ultimo elemento
 } STACK;
 
+
 #define INIT_STACK(type)                                                           \
-    STACK_ERR new_stack_##type(STACK* stack, size_t size)                          \
+    STACK_ERR stack_new_##type(STACK *stack, size_t size)                          \
     {                                                                              \
-        void* new_stack = malloc(sizeof(type) * size);                             \
-        if(new_stack == NULL)                                                      \
+        void *new_stack = malloc(sizeof(type) * size);                             \
+        if (new_stack == NULL)                                                     \
             return STACK_ALLOC_ERROR;                                              \
         *stack = (STACK){ new_stack, new_stack, new_stack + size * sizeof(type) }; \
         return STACK_NOERROR;                                                      \
     }                                                                              \
                                                                                    \
-    void free_stack_##type(STACK* stack)                                           \
+    void stack_free_##type(STACK *stack)                                           \
     {                                                                              \
         free(stack->stack);                                                        \
         stack->stack = NULL;                                                       \
     }                                                                              \
                                                                                    \
-    STACK_ERR add_stack_##type(STACK* stack, type element)                         \
+    STACK_ERR stack_add_##type(STACK *stack, type element)                         \
     {                                                                              \
-        if(stack->stack_ptr == stack->stack_end)                                   \
+        if (stack->stack_ptr == stack->stack_end)                                  \
             return STACK_FULL;                                                     \
-        *(type*)stack->stack_ptr = element;                                        \
+        *(type *) stack->stack_ptr = element;                                      \
         stack->stack_ptr += sizeof(type);                                          \
         return STACK_NOERROR;                                                      \
     }                                                                              \
                                                                                    \
-    STACK_ERR pop_stack_##type(STACK* stack, type* pop_element)                    \
+    STACK_ERR stack_pop_##type(STACK *stack, type *pop_element)                    \
     {                                                                              \
-        if(stack->stack_ptr == stack->stack)                                       \
+        if (stack->stack_ptr == stack->stack)                                      \
             return STACK_EMPTY;                                                    \
         stack->stack_ptr -= sizeof(type);                                          \
-        *pop_element = *(type*)stack->stack_ptr;                                   \
+        *pop_element = *(type *) stack->stack_ptr;                                 \
         return STACK_NOERROR;                                                      \
     }                                                                              \
                                                                                    \
-    STACK_ERR get_stack_top_##type(STACK stack, type* top_element)                 \
+    STACK_ERR stack_get_top_##type(STACK stack, type *top_element)                 \
     {                                                                              \
-        if(stack.stack_ptr == stack.stack)                                         \
+        if (stack.stack_ptr == stack.stack)                                        \
             return STACK_EMPTY;                                                    \
-        *top_element = *((type*)stack.stack_ptr - sizeof(type));                   \
+        *top_element = *((type *) stack.stack_ptr - sizeof(type));                 \
         return STACK_NOERROR;                                                      \
     }
 

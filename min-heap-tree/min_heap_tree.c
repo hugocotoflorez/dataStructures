@@ -1,5 +1,4 @@
 #include "min_heap_tree.h"
-#include <math.h>
 #include <stdio.h>
 
 int int_lessthan(void*a, void*b)
@@ -142,18 +141,25 @@ void _putseparator(int s)
     putchar('\n');
 }
 
-// just to avoid math.h deppendency. TODO: improve algorithm
-int _pow2(int n)
+int _pow2(unsigned int n)
 {
-    if(n <= 0)
-        return 1;
-    else
-        return 2 * _pow2(n - 1);
+    return 1 << n;
+}
+
+int _log2(unsigned int n)
+{
+   for (int i = 0; i < sizeof (n) * 4; i++)
+   {
+       if (n == 1)
+           return i;
+       n >>= 1;
+   }
+   return -1;
 }
 
 void print_tree(struct HEAP_TREE tree)
 {
-    int levels      = (int)log2(tree.capacity)+1;
+    int levels      = (int)_log2(tree.capacity)+1;
     int num_width   = 4;
     int total_width = _pow2(levels-1)*(num_width)*2-2;
     int left_padding, mid_padding;
@@ -171,7 +177,7 @@ void print_tree(struct HEAP_TREE tree)
                 level = levels;
                 break;
             }
-            printf("(%.*d)", num_width, tree.tree[index++] % (int)pow(10, num_width));
+            printf("(%.*d)", num_width, tree.tree[index++]);
             _putpadding(mid_padding);
         }
         putchar('\n');
