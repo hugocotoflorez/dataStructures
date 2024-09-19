@@ -4,8 +4,10 @@
 
 // Where is .h? idk
 
+// at overflow, arraylist
+// grow current capacity * AL_INCREMENT
 #define AL_INCREMENT 2;
-#define ELEM_ERR 0;
+#define ELEM_ERR     0;
 // type declarations
 typedef int element_t;
 typedef struct __araylist
