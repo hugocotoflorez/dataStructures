@@ -12,6 +12,9 @@ typedef enum
     STACK_ALLOC_ERROR,
 } STACK_ERR;
 
+static const char *stackErrStr[] = { "No error", "Stack full",
+                                     "Stack empty", "Stack alloc error" };
+
 typedef struct
 {
     void *stack;     // apunta al primer elemento
@@ -29,10 +32,10 @@ typedef struct
                               new_stack + (size) * sizeof(typeof(typed_var)) }), \
       STACK_NOERROR))
 
-#define stack_free(stackptr)     \
-    {                            \
-        free((stackptr)->stack); \
-        stackptr->stack = NULL;  \
+#define stack_destroy(stack) \
+    {                        \
+        free((stack).stack); \
+        stack.stack = NULL;  \
     }
 
 #define stack_add(stackptr, element)                            \
@@ -47,12 +50,10 @@ typedef struct
      (((stackptr)->stack_ptr -= sizeof(typeof(element))), \
       (*(pop_elem_ptr) = *(typeof(element) *) (stackptr)->stack_ptr), STACK_NOERROR))
 
-#define stack_get_top(stack, top_element_ptr)                                \
-    (((stack).stack_ptr == (stack).stack) ?                                  \
-     STACK_EMPTY :                                                           \
-     (*(top_element_ptr) = *((typeof((top_element_ptr))) (stack).stack_ptr - \
-                             1),\
-                             STACK_NOERROR))
+#define stack_get_top(stack, top_element_ptr) \
+    (((stack).stack_ptr == (stack).stack) ?   \
+     STACK_EMPTY :                            \
+     (*(top_element_ptr) = *((typeof((top_element_ptr))) (stack).stack_ptr - 1), STACK_NOERROR))
 
 
 #endif // _STACK_H
