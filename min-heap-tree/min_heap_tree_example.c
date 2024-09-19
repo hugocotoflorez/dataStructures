@@ -1,22 +1,30 @@
 #include "min_heap_tree.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-unsigned int r()
+unsigned int
+r()
 {
-    return rand()%10;
+    return rand() % 10;
 }
 
-int _main(int argc, char** argv)
+int
+main(int argc, char **argv)
 {
     struct HEAP_TREE tree;
-    int size;
+    int              height;
+
     if (argc == 2)
-        size = atoi(argv[1]);
-    else size = 15;
-    tree = create_heap_tree(size, int_lessthan);
-    for(int i = 0; i < size+1; i++)
+        height = atoi(argv[1]);
+    else
+        height = 4;
+
+    tree = create_heap_tree(height, int_lessthan);
+
+    // the +1 is to force overflow
+    for (int i = 0; i < tree.capacity + 1; i++)
         add_heap_tree(&tree, r());
+
     print_tree(tree);
     printf("Min element: %d\n", poll(&tree));
     printf("Min element: %d\n", poll(&tree));
