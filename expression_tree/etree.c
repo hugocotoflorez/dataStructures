@@ -6,10 +6,49 @@
 #include <stdlib.h>
 #include <string.h>
 
+// clang-format off
 static int PRIORITY[] = {
-    ['+'] = 1, ['-'] = 1, ['*'] = 2, ['/'] = 2,
-    ['^'] = 3, ['('] = 0, [')'] = 4,
+    ['+'] = 3,
+    ['-'] = 3,
+    ['*'] = 2,
+    ['/'] = 2,
+    ['^'] = 1,
+    ['('] = 0,
 };
+// clang-format on
+
+void
+print_inorden(BTree *tree)
+{
+    if (tree == NULL)
+        return;
+    print_inorden(tree->lchild);
+    printf("%s ", (char *) btree_get_value(*tree));
+    print_inorden(tree->rchild);
+}
+
+void
+print_stack(STACK s, STACK s2)
+{
+    /* This can be done because I know how
+     * the stack is implemented. Just used
+     * for debugging and info reasons. */
+    printf("Operands: ");
+    for (BTree **i = s.stack_first; (void *) i < s.stack_ptr; i++)
+    {
+        printf("{");
+        print_inorden(*i);
+        printf("}");
+    }
+    putchar('\n');
+    printf("Operators:");
+    for (char *i = s2.stack_first; (void *) i < s2.stack_ptr; i++)
+    {
+        printf("%c", *i);
+    }
+    putchar('\n');
+    putchar('\n');
+}
 
 inline static int
 is_num(char c)
@@ -61,94 +100,102 @@ analize(char *expr)
     {
         // jump over spaces
         if (*expr == ' ')
-        {
-            ++*expr;
-            continue;
-        }
+            ++expr;
 
         // current element is a number
-        if (is_num(*expr))
+        else if (is_num(*expr))
         {
             temp_tree = btree_empty();
             btree_set_value(temp_tree, strnum(get_num(&expr))); // GNU c !
             assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR);
         }
 
-        // current element is an operator
-        else
+        else if (*expr == ')')
         {
-            // top of operators stack
-            status = stack_get_top(stack_operators, &top_op);
-
-            // if operators stack is empty, add to stack
-            if (status == STACK_EMPTY)
-                stack_add(&stack_operators, *expr);
-
-            // stack is not empty
-            else
+            temp_tree = NULL;
+            while (stack_get_top(stack_operators, &top_op) != STACK_EMPTY)
             {
-                // create subtree until '('
-                if (*expr == ')')
-                    while (*expr != '(' && stack_get_top(stack_operators, &top_op) != STACK_EMPTY)
-                    {
-                        ++expr;
-                    }
-                // if new priority <= last, add to stack
-                else if (PRIORITY[(int) *expr] <= PRIORITY[(int) top_op])
-                    stack_add(&stack_operators, *expr);
-
-                // new priority is greater
-
-                else
+                if (top_op == '(')
                 {
-                    buf[0] = *expr;
-                    // create new tree with root value operator
-                    temp_tree = btree_empty();
-                    btree_set_value(temp_tree, strdup(buf)); // GNU c !
-                    // remove from stack and add to tree as right child
-                    assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
-                    btree_extend_rchild(temp_tree, subtree);
-                    // remove from stack and add to tree as left child
-                    assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
-                    btree_extend_lchild(temp_tree, subtree);
-                    // add temp tree to stack
-                    assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR);
+                    stack_pop(&stack_operators, &top_op);
+                    break;
                 }
+                temp_tree = btree_empty();
+                // remove from stack and set as root value
+                assert(stack_pop(&stack_operators, &top_op) == STACK_NOERROR);
+                buf[0] = top_op;
+                btree_set_value(temp_tree, strdup(buf)); // GNU C !
+                // remove from stack and add to tree as right child
+                assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
+                btree_extend_rchild(temp_tree, subtree);
+                // remove from stack and add to tree as left child
+                assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
+                btree_extend_lchild(temp_tree, subtree);
+                // add temp tree to stack
+                assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR);
             }
-            // move expression string cursor
             ++expr;
         }
+
+        else // current element is an operator
+        {
+            status = stack_get_top(stack_operators, &top_op); // top of operators stack
+
+            if (status == STACK_EMPTY) // if operators stack is empty, add to stack
+            {
+                stack_add(&stack_operators, *expr);
+                ++expr;
+            }
+
+            else // stack is not empty
+            {
+                if (PRIORITY[(int) *expr] <= PRIORITY[(int) top_op]) // if new priority <= last, add to stack
+                {
+                    stack_add(&stack_operators, *expr);
+                    // move expression string cursor
+                    ++expr;
+                }
+
+                else // new priority is greater
+                {
+                    buf[0] = *expr;
+                    ++expr;
+                    temp_tree = btree_empty();
+                    btree_set_value(temp_tree, strnum(get_num(&expr))); // GNU c !
+                    assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR);
+                    temp_tree = btree_empty(); // create new tree with root value operator
+                    btree_set_value(temp_tree, strdup(buf)); // GNU c !
+                    assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR); // remove from stack and add to tree as right child
+                    btree_extend_rchild(temp_tree, subtree);
+                    assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR); // remove from stack and add to tree as left child
+                    btree_extend_lchild(temp_tree, subtree);
+                    assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR); // add temp tree to stack
+                }
+            }
+        }
+        print_stack(stack_operands, stack_operators);
     }
+
     temp_tree = NULL;
-    while (stack_get_top(stack_operators, &subtree) != STACK_EMPTY)
+    while (stack_get_top(stack_operators, &top_op) != STACK_EMPTY)
     {
         temp_tree = btree_empty();
         // remove from stack and set as root value
         assert(stack_pop(&stack_operators, &top_op) == STACK_NOERROR);
         buf[0] = top_op;
         btree_set_value(temp_tree, strdup(buf)); // GNU C !
-
         // remove from stack and add to tree as right child
-        assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
-        btree_extend_rchild(temp_tree, subtree);
+        if (stack_pop(&stack_operands, &subtree) == STACK_NOERROR)
+            btree_extend_rchild(temp_tree, subtree);
         // remove from stack and add to tree as left child
-        assert(stack_pop(&stack_operands, &subtree) == STACK_NOERROR);
-        btree_extend_lchild(temp_tree, subtree);
+        if (stack_pop(&stack_operands, &subtree) == STACK_NOERROR)
+            btree_extend_lchild(temp_tree, subtree);
         // add temp tree to stack
         assert(stack_add(&stack_operands, temp_tree) == STACK_NOERROR);
     }
+
     // assert(stack_pop(&stack_operands, &temp_tree) == STACK_NOERROR);
     return temp_tree;
-}
-
-void
-print_inorden(BTree *tree)
-{
-    if (tree == NULL)
-        return;
-    print_inorden(tree->lchild);
-    printf("%s ", (char *) btree_get_value(*tree));
-    print_inorden(tree->rchild);
 }
 
 int
@@ -163,7 +210,9 @@ main(int argc, char *argv[])
     }
     else
     {
-        tree = analize("2+3*5-1/4");
+        tree = analize("4+5^(2*3)+8");
+        // tree = analize("4+5^2*3+8");
+        // tree = analize("2/(3+4)");
         print_inorden(tree);
         btree_delete_tree(tree);
     }
