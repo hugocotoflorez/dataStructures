@@ -12,14 +12,16 @@ typedef enum
     STACK_ALLOC_ERROR,
 } STACK_ERR;
 
+#ifdef USE_ERRSTR
 static const char *stackErrStr[] = { "No error", "Stack full",
                                      "Stack empty", "Stack alloc error" };
+#endif
 
 typedef struct
 {
-    void *stack;     // apunta al primer elemento
-    void *stack_ptr; // apunta al siguiente elemento
-    void *stack_end; // apunta al ultimo elemento
+    void *stack_first; // apunta al primer elemento
+    void *stack_ptr;   // apunta al siguiente elemento
+    void *stack_end;   // apunta al ultimo elemento
 } STACK;
 
 #define stack_init() void *new_stack;
@@ -32,10 +34,10 @@ typedef struct
                               new_stack + (size) * sizeof(typeof(typed_var)) }), \
       STACK_NOERROR))
 
-#define stack_destroy(stack) \
-    {                        \
-        free((stack).stack); \
-        stack.stack = NULL;  \
+#define stack_destroy(stack)       \
+    {                              \
+        free((stack).stack_first); \
+        stack.stack_first = NULL;  \
     }
 
 #define stack_add(stackptr, element)                            \
@@ -44,15 +46,15 @@ typedef struct
      ((*(typeof(element) *) (stackptr)->stack_ptr = (element)), \
       ((stackptr)->stack_ptr += sizeof(typeof(element))), STACK_NOERROR))
 
-#define stack_pop(stackptr, pop_elem_ptr)                 \
-    (((stackptr)->stack_ptr == (stackptr)->stack) ?       \
-     STACK_EMPTY :                                        \
-     (((stackptr)->stack_ptr -= sizeof(typeof(element))), \
-      (*(pop_elem_ptr) = *(typeof(element) *) (stackptr)->stack_ptr), STACK_NOERROR))
+#define stack_pop(stackptr, pop_elem_ptr)                         \
+    (((stackptr)->stack_ptr == (stackptr)->stack_first) ?         \
+     STACK_EMPTY :                                                \
+     (((stackptr)->stack_ptr -= sizeof(typeof(*(pop_elem_ptr)))), \
+      (*(pop_elem_ptr) = *(typeof(*(pop_elem_ptr)) *) (stackptr)->stack_ptr), STACK_NOERROR))
 
-#define stack_get_top(stack, top_element_ptr) \
-    (((stack).stack_ptr == (stack).stack) ?   \
-     STACK_EMPTY :                            \
+#define stack_get_top(stack, top_element_ptr)     \
+    (((stack).stack_ptr == (stack).stack_first) ? \
+     STACK_EMPTY :                                \
      (*(top_element_ptr) = *((typeof((top_element_ptr))) (stack).stack_ptr - 1), STACK_NOERROR))
 
 
