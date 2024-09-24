@@ -10,7 +10,7 @@ typedef enum
     STACK_FULL,
     STACK_EMPTY,
     STACK_ALLOC_ERROR,
-} STACK_ERR;
+} StackErr;
 
 #ifdef USE_ERRSTR
 static const char *stackErrStr[] = { "No error", "Stack full",
@@ -22,7 +22,7 @@ typedef struct
     void *stack_first; // apunta al primer elemento
     void *stack_ptr;   // apunta al siguiente elemento
     void *stack_end;   // apunta al ultimo elemento
-} STACK;
+} Stack;
 
 #define stack_init() void *new_stack;
 
@@ -30,7 +30,7 @@ typedef struct
     ((new_stack = malloc(sizeof(typeof(typed_var)) * (size))),                   \
      (new_stack == NULL) ?                                                       \
      STACK_ALLOC_ERROR :                                                         \
-     ((*(stackptr) = (STACK){ new_stack, new_stack,                              \
+     ((*(stackptr) = (Stack){ new_stack, new_stack,                              \
                               new_stack + (size) * sizeof(typeof(typed_var)) }), \
       STACK_NOERROR))
 

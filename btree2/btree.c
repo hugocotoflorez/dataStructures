@@ -54,9 +54,9 @@ btree_delete(BTree *tree)
 }
 
 inline void *
-btree_get_value(BTree tree, int nindex)
+btree_get_value(BTree *tree, int nindex)
 {
-    return tree.data[nindex];
+    return tree->data[nindex];
 }
 
 inline void *

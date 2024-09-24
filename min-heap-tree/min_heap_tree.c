@@ -214,6 +214,3 @@ print_plain_tree(struct HEAP_TREE tree)
     putchar('\n');
 }
 
-
-#undef MHT_EXITONERR
-#undef MHT_EXITONERR

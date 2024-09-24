@@ -17,9 +17,6 @@ typedef struct __btree
     int capacity; // max num of nodes
 } BTree;
 
-typedef void* type;
-typedef const char* format;
-
 // create a tree of a given size
 extern BTree  btree_create(int);
 extern void   btree_grow(BTree *, int);
@@ -34,7 +31,7 @@ extern BTree *btree_extend_lchild(BTree *, int, BTree);
 extern BTree *btree_extend_rchild(BTree *, int, BTree *);
 extern int    btree_get_height(BTree);
 extern int    btree_get_relative_height(BTree, int);
-extern void   btree_repr(BTree, format, type);
+extern void   btree_repr(BTree, const char *);
 
 #define _putpadding(s)                \
     do                                \
